@@ -1,0 +1,9 @@
+type Spot {
+  contact: String!
+  details: String!
+  created_at: String!
+}
+
+type Query {
+  allSpots: [Spot!]
+}
