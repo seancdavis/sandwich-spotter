@@ -1,63 +1,128 @@
 import Head from "next/head";
-import Image from "next/image";
+import { useState } from "react";
+// import Image from "next/image";
 import gql from "graphql-tag";
-import { useQuery, useMutation } from "@apollo/react-hooks";
+// import { useQuery } from "@apollo/react-hooks";
+import { useMutation } from "@apollo/react-hooks";
 import { useForm } from "react-hook-form";
 
-const GET_SPOTS_QUERY = gql`
-  query {
-    allSpots {
-      data {
-        contact
-        details
-        created_at
-      }
-    }
-  }
-`;
+// const GET_SPOTS_QUERY = gql`
+//   query {
+//     allSpots {
+//       data {
+//         contact
+//         slide_color
+//         sandwich_position
+//         created_at
+//       }
+//     }
+//   }
+// `;
 
 const CREATE_SPOT_MUTATION = gql`
   mutation CreateSpot(
     $contact: String!
-    $details: String!
+    $slide_color: String!
+    $sandwich_position: String!
     $created_at: String!
   ) {
     createSpot(
-      data: { contact: $contact, details: $details, created_at: $created_at }
+      data: {
+        contact: $contact
+        slide_color: $slide_color
+        sandwich_position: $sandwich_position
+        created_at: $created_at
+      }
     ) {
       contact
-      details
+      slide_color
+      sandwich_position
       created_at
     }
   }
 `;
 
-export default function Home() {
-  const { data, loading } = useQuery(GET_SPOTS_QUERY);
+const SandwichForm = ({ successFunc }: { successFunc: Function }) => {
   const [createSpot] = useMutation(CREATE_SPOT_MUTATION);
   const {
     register,
     handleSubmit,
-    reset,
+    // reset,
     formState: { errors },
   } = useForm();
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  console.log({ data });
 
   const onSubmit = async (data: any) => {
     const created_at = new Date();
     const dataToSubmit = { ...data, created_at };
-    const spot = await createSpot({ variables: dataToSubmit });
-    console.log(spot);
+    await createSpot({ variables: dataToSubmit });
 
-    reset();
+    // reset();
+    successFunc(true);
 
     return false;
   };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="max-w-sm mx-auto mb-16">
+      <div className="mb-4">
+        <label className="block text-lg">Twitter handle or email address</label>
+        <input
+          {...register("contact", { required: true })}
+          className="p-2 w-full rounded-sm border-black border"
+        />
+        {errors.contact && (
+          <span style={{ color: "red" }} className="font-bold">
+            This field is required.
+          </span>
+        )}
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-lg">
+          What color was the background of the slide?
+        </label>
+        <input
+          {...register("slide_color", { required: true })}
+          className="p-2 w-full rounded-sm border-black border"
+        />
+        {errors.slide_color && (
+          <span style={{ color: "red" }} className="font-bold">
+            This field is required.
+          </span>
+        )}
+      </div>
+
+      <div className="mb-6">
+        <label className="block text-lg">
+          Where was the sandwich located on the slide?
+        </label>
+        <input
+          {...register("sandwich_position", { required: true })}
+          className="p-2 w-full rounded-sm border-black border"
+        />
+        {errors.sandwich_position && (
+          <span style={{ color: "red" }} className="font-bold">
+            This field is required.
+          </span>
+        )}
+      </div>
+
+      <input
+        type="submit"
+        value="Submit"
+        className="bg-blue inline-block text-white rounded-md py-3 px-8 hover:bg-blue-light transition-colors font-headings uppercase text-xs"
+      />
+    </form>
+  );
+};
+
+export default function Home() {
+  const [formSuccess, updateFormSuccess] = useState(false);
+  // const { data, loading } = useQuery(GET_SPOTS_QUERY);
+
+  // if (loading) {
+  //   return <div>Loading...</div>;
+  // }
 
   return (
     <div>
@@ -67,22 +132,52 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div>
-            <label>Contact</label>
-            <input {...register("contact", { required: true })} />
-            {errors.contact && <span>This field is required</span>}
+      <main className="bg-home-page min-h-screen py-16">
+        <div className="mx-auto max-w-2xl px-4">
+          <div className="text-center mb-8">
+            <h1 className="mb-2">Sandwich Spotter</h1>
+            <p className="text-xl">Did you spot the sandwich?</p>
           </div>
-
-          <div>
-            <label>Details</label>
-            <input {...register("details", { required: true })} />
-            {errors.details && <span>This field is required</span>}
-          </div>
-
-          <input type="submit" value="Submit" />
-        </form>
+          {formSuccess ? (
+            <div className="max-w-lg mx-auto text-2xl text-center mb-16">
+              <p className="mb-4">
+                It seems you have spotted the sandwich! Nice work.
+              </p>
+              <p>
+                If you were the first, Sean will be in touch to send you some
+                sweet{" "}
+                <a
+                  href="https://www.stackbit.com/"
+                  target="_blank"
+                  className="text-blue underline">
+                  Stackbit
+                </a>{" "}
+                swag!
+              </p>
+            </div>
+          ) : (
+            <SandwichForm successFunc={updateFormSuccess} />
+          )}
+          <footer className="text-center border-t-2 border-gray-300 pt-8">
+            <p className="mb-2">
+              Made with <span className="inline-block mr-1">🥪</span> by{" "}
+              <a
+                href="https://twitter.com/seancdavis29"
+                target="_blank"
+                className="text-blue underline">
+                Sean C Davis
+              </a>
+              .
+            </p>
+            <p className="text-sm">
+              (
+              <a href="/" target="_blank" className="text-blue underline">
+                source code
+              </a>
+              )
+            </p>
+          </footer>
+        </div>
       </main>
     </div>
   );

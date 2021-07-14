@@ -1,6 +1,7 @@
 type Spot {
   contact: String!
-  details: String!
+  slide_color: String!
+  sandwich_position: String!
   created_at: String!
 }
 
